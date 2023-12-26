@@ -18,6 +18,7 @@ import {
   exhaustMap,
   filter,
   mergeMap,
+  tap,
 } from "rxjs/operators";
 import { fromPromise } from "rxjs/internal-compatibility";
 
@@ -30,7 +31,8 @@ export class CourseDialogComponent implements OnInit, AfterViewInit {
   form: FormGroup;
   course: Course;
 
-  @ViewChild("saveButton", { static: true }) saveButton: ElementRef;
+  @ViewChild("saveButton", { static: true, read: ElementRef })
+  saveButton: ElementRef;
 
   @ViewChild("searchInput", { static: true }) searchInput: ElementRef;
 
@@ -49,16 +51,25 @@ export class CourseDialogComponent implements OnInit, AfterViewInit {
     });
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.form.valueChanges
       .pipe(
         filter(() => this.form.valid),
+        // in order
         concatMap((changes) => this.saveCourse(changes))
+        // in parallel
+        // mergeMap((changes) => this.saveCourse(changes))
       )
       .subscribe((changes) => {});
   }
 
-  ngAfterViewInit() {}
+  ngAfterViewInit(): void {
+    fromEvent(this.saveButton.nativeElement, "click")
+      // .pipe(concatMap(() => this.saveCourse(this.form.value)))
+      // like concatMap but ignores repetitive calls while current one isnt finished (like button spam)
+      .pipe(exhaustMap(() => this.saveCourse(this.form.value)))
+      .subscribe();
+  }
 
   saveCourse(changes): Observable<any> {
     return fromPromise(
@@ -72,7 +83,7 @@ export class CourseDialogComponent implements OnInit, AfterViewInit {
     );
   }
 
-  close() {
+  close(): void {
     this.dialogRef.close();
   }
 }
