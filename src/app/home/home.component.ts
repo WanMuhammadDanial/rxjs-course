@@ -1,9 +1,10 @@
 import { Component, OnInit } from "@angular/core";
 import { Course } from "../model/course";
-import { interval, noop, Observable, of, timer } from "rxjs";
+import { interval, noop, Observable, of, throwError, timer } from "rxjs";
 import {
   catchError,
   delayWhen,
+  finalize,
   map,
   retryWhen,
   shareReplay,
@@ -26,9 +27,20 @@ export class HomeComponent implements OnInit {
     const http$ = createHttpObservable("/api/courses");
 
     const courses$: Observable<Course[]> = http$.pipe(
-      tap(()=> console.log('http request executed')),
+      // catch error handle
+      // catchError((error) => {
+      //   console.log("Error occured ", error);
+      //   return throwError(error)
+      // }),
+      // finalize(()=>{
+      //   console.log('finalize')
+      // }),
+      tap(() => console.log("http request executed")),
       map((res) => Object.values(res["payload"])),
-      shareReplay()
+      shareReplay(),
+      // retryWhen creates a new stream an sub to it
+      // delayWhen is called after every error objservable is emitted
+      retryWhen((errors) => errors.pipe(delayWhen(() => timer(2000))))
     );
 
     this.beginnersCourses$ = courses$.pipe(

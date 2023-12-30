@@ -32,5 +32,9 @@ export class AboutComponent implements OnInit {
     // const interval2$ = interval1$.pipe(map((val) => 10 * val));
     // const result$ = merge(interval1$, interval2$);
     // result$.subscribe(console.log);
+    //using abortController in util to cancel when calling unsub
+    // const http$ = createHttpObservable('/api/courses');
+    // const sub = http$.subscribe(console.log);
+    // setTimeout(()=> sub.unsubscribe(), 0)
   }
 }
